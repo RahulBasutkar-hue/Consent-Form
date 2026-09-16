@@ -3,7 +3,7 @@
 // (the ServiceNow instance must allow CORS from your app origin).
 const SERVICENOW_INSTANCE =
   process.env.REACT_APP_SERVICENOW_URL
-  || (process.env.NODE_ENV === 'development' ? '' : 'https://dev324684.service-now.com');
+  || (process.env.NODE_ENV === 'development' ? '' : 'https://dev280910.service-now.com');
 
 const isActiveUser = (user) => user.active === true || user.active === 'true';
 
