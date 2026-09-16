@@ -1,0 +1,133 @@
+.faq-container h3,
+.faq-container .panel-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.faq-lead {
+  margin: 4px 0 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.search-box {
+  margin-bottom: 16px;
+}
+
+.faq-search {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+  color: var(--text);
+  background: var(--surface);
+  font-family: inherit;
+}
+
+.faq-search:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(53, 56, 205, 0.12);
+}
+
+.faq-list {
+  margin-bottom: 16px;
+}
+
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.faq-question {
+  padding: 14px 16px;
+  background: var(--surface-muted);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.faq-question:hover {
+  background: #eef2ff;
+}
+
+.faq-question.active {
+  background: #eef2ff;
+  color: var(--brand);
+}
+
+.faq-icon {
+  font-size: 18px;
+  font-weight: 650;
+  width: 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.faq-answer {
+  padding: 14px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.faq-answer p {
+  margin: 0;
+  line-height: 1.6;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.faq-contact {
+  background: var(--surface-muted);
+  color: var(--text);
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.faq-contact h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.faq-contact p {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.contact-support-btn {
+  padding: 10px 16px;
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.contact-support-btn:hover {
+  background: var(--brand-hover);
+}
+
+.faq-contact-confirm {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #067647;
+}

@@ -1,0 +1,145 @@
+.otp-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.otp-popup {
+  background: white;
+  padding: 28px;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(16, 24, 40, 0.18);
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid #eaecf0;
+}
+
+.otp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.otp-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.otp-hint {
+  text-align: center;
+  color: #666;
+  margin: 0 0 16px;
+}
+
+.form-message {
+  text-align: center;
+  margin: 0 0 16px;
+  font-size: 14px;
+}
+
+.form-message.error {
+  color: #c82333;
+}
+
+.form-message.success {
+  color: #218838;
+}
+
+.otp-phone-form {
+  display: grid;
+  gap: 10px;
+}
+
+.otp-phone-form label {
+  color: #344054;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.otp-phone-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+.otp-inputs {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.otp-input {
+  width: 50px;
+  height: 50px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  transition: border-color 0.3s;
+}
+
+.otp-input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.verify-btn {
+  width: 100%;
+  padding: 11px 12px;
+  background: #3538cd;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.verify-btn:hover:not(:disabled) {
+  background: #2d31a6;
+}
+
+.verify-btn:disabled,
+.resend-otp-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.resend-otp-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px 12px;
+  background: transparent;
+  color: #3538cd;
+  border: 1px solid #3538cd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
