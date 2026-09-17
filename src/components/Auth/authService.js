@@ -1,8 +1,5 @@
-// In development, leave this empty so requests go through the CRA proxy (package.json).
-// In production, set REACT_APP_SERVICENOW_URL or use the instance URL directly
-// (the ServiceNow instance must allow CORS from your app origin).
-const SERVICENOW_INSTANCE =
-  process.env.REACT_APP_SERVICENOW_URL
+// In development, leave this empty so requests go through the CRA proxy.
+const SERVICENOW_INSTANCE = process.env.REACT_APP_SERVICENOW_URL
   || (process.env.NODE_ENV === 'development' ? '' : 'https://dev280910.service-now.com');
 
 const isActiveUser = (user) => user.active === true || user.active === 'true';
@@ -10,18 +7,21 @@ const isActiveUser = (user) => user.active === true || user.active === 'true';
 class AuthService {
   async authenticateUser(username, password) {
     try {
-      const credentials = btoa(`${username}:${password}`);
-      const query = encodeURIComponent(`user_name=${username}`);
+      const normalizedUsername = username.trim();
+      const credentials = btoa(`${normalizedUsername}:${password}`);
+      const params = new URLSearchParams({
+        sysparm_query: `user_name=${normalizedUsername}`,
+        sysparm_fields: 'sys_id,user_name,first_name,last_name,email,phone,mobile_phone,active'
+      });
 
       const response = await fetch(
-        `${SERVICENOW_INSTANCE}/api/now/table/sys_user?sysparm_query=${query}&sysparm_fields=sys_id,user_name,first_name,last_name,email,phone,mobile_phone,active`,
+        `${SERVICENOW_INSTANCE}/api/now/table/sys_user?${params.toString()}`,
         {
           method: 'GET',
           credentials: 'omit',
           headers: {
             Authorization: `Basic ${credentials}`,
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
+            Accept: 'application/json'
           }
         }
       );
@@ -51,13 +51,27 @@ class AuthService {
       if (response.status === 401) {
         return {
           success: false,
-          message: 'Invalid username or password'
+          message: 'ServiceNow rejected API Basic Auth. Check that this user has a local ServiceNow password and that Basic Auth is enabled for the instance.'
+        };
+      }
+
+      if (response.status === 403) {
+        return {
+          success: false,
+          message: 'ServiceNow denied access to the user table. Check the instance ACL or API access.'
+        };
+      }
+
+      if (response.status === 404) {
+        return {
+          success: false,
+          message: 'ServiceNow instance or API endpoint was not found.'
         };
       }
 
       return {
         success: false,
-        message: 'Invalid credentials'
+        message: `ServiceNow login failed (${response.status}).`
       };
     } catch (error) {
       return {
