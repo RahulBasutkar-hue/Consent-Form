@@ -10,7 +10,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const targetUrl = new URL(`${req.url.replace(/^\/api/, '')}`, SERVICENOW_INSTANCE);
+  const targetUrl = new URL(req.url, SERVICENOW_INSTANCE);
   const headers = {
     Accept: req.headers.accept || 'application/json'
   };
