@@ -1,5 +1,4 @@
-const OTP_API_BASE =
-  process.env.NODE_ENV === 'development' ? '/otp-dev' : 'https://api.otp.dev';
+const OTP_API_BASE = '/otp-dev';
 
 const OTP_HEADERS = {
   'X-OTP-Key': '380fd02764ebc32e2f3a91e06aeb8b42',

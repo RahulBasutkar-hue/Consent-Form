@@ -1,0 +1,3 @@
+/api/*  /.netlify/functions/service-now/:splat  200!
+/otp-dev/*  https://api.otp.dev/:splat  200!
+/*    /index.html   200

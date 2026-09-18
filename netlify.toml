@@ -1,0 +1,22 @@
+[build]
+  command = "npm run build"
+  publish = "build"
+
+# Same-origin proxy so the browser never calls ServiceNow directly (avoids CORS).
+# Must stay above the SPA fallback.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/service-now/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/otp-dev/*"
+  to = "https://api.otp.dev/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

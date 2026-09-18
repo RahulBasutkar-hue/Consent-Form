@@ -1,6 +1,11 @@
-const SERVICENOW_INSTANCE = process.env.NODE_ENV === 'development'
-  ? ''
-  : 'https://dev280910.service-now.com';
+// Sign-in still uses the ServiceNow Table API:
+// GET /api/now/table/sys_user?sysparm_query=user_name=...
+// with Basic auth against https://dev280910.service-now.com
+//
+// The browser calls same-origin /api/... (empty prefix). Local CRA proxy and
+// the Netlify function only forward that same request to ServiceNow. Calling
+// service-now.com from the Netlify page is blocked by CORS (Postman is not).
+const SERVICENOW_INSTANCE = '';
 
 const isActiveUser = (user) => user.active === true || user.active === 'true';
 
