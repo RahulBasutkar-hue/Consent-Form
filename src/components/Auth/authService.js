@@ -1,5 +1,4 @@
-// Keep ServiceNow credentials and cross-origin requests behind the local/Vercel proxy.
-const SERVICENOW_INSTANCE = '';
+const SERVICENOW_INSTANCE = 'https://dev280910.service-now.com';
 
 const isActiveUser = (user) => user.active === true || user.active === 'true';
 
