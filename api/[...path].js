@@ -1,0 +1,39 @@
+const SERVICENOW_INSTANCE = process.env.SERVICENOW_INSTANCE_URL
+  || process.env.REACT_APP_SERVICENOW_URL
+  || 'https://dev280910.service-now.com';
+
+const allowedMethods = new Set(['GET', 'PUT', 'POST', 'PATCH', 'DELETE']);
+
+module.exports = async function handler(req, res) {
+  if (!allowedMethods.has(req.method)) {
+    res.setHeader('Allow', [...allowedMethods]);
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const targetUrl = new URL(`${req.url.replace(/^\/api/, '')}`, SERVICENOW_INSTANCE);
+  const headers = {
+    Accept: req.headers.accept || 'application/json'
+  };
+
+  for (const headerName of ['authorization', 'content-type']) {
+    if (req.headers[headerName]) {
+      headers[headerName] = req.headers[headerName];
+    }
+  }
+
+  const response = await fetch(targetUrl, {
+    method: req.method,
+    headers,
+    body: ['GET', 'HEAD'].includes(req.method) ? undefined : JSON.stringify(req.body)
+  });
+
+  res.status(response.status);
+  response.headers.forEach((value, key) => {
+    if (key.toLowerCase() !== 'www-authenticate') {
+      res.setHeader(key, value);
+    }
+  });
+
+  const body = await response.arrayBuffer();
+  return res.send(Buffer.from(body));
+};
