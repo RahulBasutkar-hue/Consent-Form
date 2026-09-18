@@ -56,7 +56,16 @@ class AuthService {
       );
 
       if (response.ok) {
-        const data = await response.json();
+        const payload = await response.text();
+        let data;
+        try {
+          data = JSON.parse(payload);
+        } catch {
+          return {
+            success: false,
+            message: 'ServiceNow returned a non-JSON response.'
+          };
+        }
         if (data.result && data.result.length > 0) {
           const user = data.result[0];
           if (isActiveUser(user)) {

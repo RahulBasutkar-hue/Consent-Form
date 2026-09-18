@@ -19,8 +19,10 @@ module.exports = async function handler(req, res) {
   });
 
   res.status(response.status);
+  res.setHeader('Content-Type', response.headers.get('content-type') || 'application/json');
   response.headers.forEach((value, key) => {
-    if (key.toLowerCase() !== 'www-authenticate') {
+    const headerName = key.toLowerCase();
+    if (!['www-authenticate', 'content-encoding', 'content-length', 'transfer-encoding', 'connection', 'keep-alive'].includes(headerName)) {
       res.setHeader(key, value);
     }
   });

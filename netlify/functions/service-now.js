@@ -3,6 +3,14 @@ const SERVICENOW_INSTANCE = process.env.SERVICENOW_INSTANCE_URL
   || 'https://dev280910.service-now.com';
 
 const allowedMethods = new Set(['GET', 'PUT', 'POST', 'PATCH', 'DELETE']);
+const skippedResponseHeaders = new Set([
+  'www-authenticate',
+  'content-encoding',
+  'content-length',
+  'transfer-encoding',
+  'connection',
+  'keep-alive'
+]);
 
 const getServiceNowPath = (eventPath = '') => {
   if (eventPath.startsWith('/.netlify/functions/service-now')) {
@@ -59,9 +67,11 @@ exports.handler = async (event) => {
         : event.body
   });
 
-  const responseHeaders = {};
+  const responseHeaders = {
+    'Content-Type': response.headers.get('content-type') || 'application/json'
+  };
   response.headers.forEach((value, key) => {
-    if (key.toLowerCase() !== 'www-authenticate') {
+    if (!skippedResponseHeaders.has(key.toLowerCase())) {
       responseHeaders[key] = value;
     }
   });
