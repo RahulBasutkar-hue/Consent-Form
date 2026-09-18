@@ -5,22 +5,46 @@ const SERVICENOW_INSTANCE = process.env.REACT_APP_SERVICENOW_URL
 const isActiveUser = (user) => user.active === true || user.active === 'true';
 
 class AuthService {
+  async getUser(username, password) {
+    const normalizedUsername = username.trim();
+    const credentials = btoa(`${normalizedUsername}:${password}`);
+    const params = new URLSearchParams({
+      sysparm_query: `user_name=${normalizedUsername}`,
+      sysparm_fields: 'sys_id,user_name,first_name,last_name,email,phone,mobile_phone,active'
+    });
+
+    const response = await fetch(
+      `${SERVICENOW_INSTANCE}/api/now/table/sys_user?${params.toString()}`,
+      {
+        method: 'GET',
+        credentials: 'omit',
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          Accept: 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`ServiceNow user lookup failed (${response.status}).`);
+    }
+
+    const data = await response.json();
+    return data.result?.[0] || null;
+  }
+
   async authenticateUser(username, password) {
     try {
-      const normalizedUsername = username.trim();
-      const credentials = btoa(`${normalizedUsername}:${password}`);
-      const params = new URLSearchParams({
-        sysparm_query: `user_name=${normalizedUsername}`,
-        sysparm_fields: 'sys_id,user_name,first_name,last_name,email,phone,mobile_phone,active'
-      });
-
       const response = await fetch(
-        `${SERVICENOW_INSTANCE}/api/now/table/sys_user?${params.toString()}`,
+        `${SERVICENOW_INSTANCE}/api/now/table/sys_user?${new URLSearchParams({
+          sysparm_query: `user_name=${username.trim()}`,
+          sysparm_fields: 'sys_id,user_name,first_name,last_name,email,phone,mobile_phone,active'
+        }).toString()}`,
         {
           method: 'GET',
           credentials: 'omit',
           headers: {
-            Authorization: `Basic ${credentials}`,
+            Authorization: `Basic ${btoa(`${username.trim()}:${password}`)}`,
             Accept: 'application/json'
           }
         }
@@ -51,27 +75,27 @@ class AuthService {
       if (response.status === 401) {
         return {
           success: false,
-          message: 'ServiceNow rejected API Basic Auth. Check that this user has a local ServiceNow password and that Basic Auth is enabled for the instance.'
+          message: 'Invalid Username Or Password.'
         };
       }
 
       if (response.status === 403) {
         return {
           success: false,
-          message: 'ServiceNow denied access to the user table. Check the instance ACL or API access.'
+          message: 'Unauthorized access.'
         };
       }
 
       if (response.status === 404) {
         return {
           success: false,
-          message: 'ServiceNow instance or API endpoint was not found.'
+          message: 'API endpoint was not found.'
         };
       }
 
       return {
         success: false,
-        message: `ServiceNow login failed (${response.status}).`
+        message: `login failed (${response.status}).`
       };
     } catch (error) {
       return {
@@ -79,6 +103,47 @@ class AuthService {
         message: 'Network error or server unavailable'
       };
     }
+  }
+
+  async updateConsent(user, password, hasConsent) {
+    const username = user?.user_name;
+    if (!username || !password) {
+      throw new Error('The logged-in user credentials are unavailable. Please log in again.');
+    }
+
+    const credentials = btoa(`${username}:${password}`);
+    const resolvedUser = user.sys_id ? user : await this.getUser(username, password);
+    const sysId = resolvedUser?.sys_id;
+    if (!sysId) {
+      throw new Error('ServiceNow did not return a user sys_id.');
+    }
+
+    const response = await fetch(
+      `${SERVICENOW_INSTANCE}/api/x_2214700_smart_0/smart_engine_apis/customer/${encodeURIComponent(sysId)}`,
+      {
+        method: 'PUT',
+        credentials: 'omit',
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify({ has_consent: hasConsent })
+      }
+    );
+
+    if (!response.ok) {
+      let detail = '';
+      try {
+        const body = await response.json();
+        detail = body?.message || body?.error || '';
+      } catch {
+        detail = '';
+      }
+      throw new Error(detail || `Could not save consent (${response.status}).`);
+    }
+
+    return response.status === 204 ? null : response.json();
   }
 
   async validateCredentials(username, password) {

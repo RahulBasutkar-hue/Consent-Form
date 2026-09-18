@@ -122,7 +122,7 @@ const OTPVerification = ({ phone = '', onClose, onVerify, onPhoneProvided }) => 
 
     try {
       await verifyOtp(formattedPhone, otpValue);
-      onVerify(otpValue);
+      await onVerify(otpValue);
     } catch (err) {
       setError(err.message || 'OTP verification failed.');
     } finally {
