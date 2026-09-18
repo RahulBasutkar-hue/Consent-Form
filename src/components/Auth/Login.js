@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaUniversity } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/Login.css';
 
@@ -39,8 +40,15 @@ const Login = () => {
 
   return (
     <div className="login-container">
+      <div className="login-brand">
+        <span className="login-brand-mark" aria-hidden="true">
+          <FaUniversity />
+        </span>
+        <h1>Laxmi Chit Fund</h1>
+        <p>Trusted financial services</p>
+      </div>
       <div className="login-form">
-        <h2>ServiceNow Login</h2>
+        <h2>Login</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <input
