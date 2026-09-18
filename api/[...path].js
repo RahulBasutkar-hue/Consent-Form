@@ -10,7 +10,12 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const targetUrl = new URL(req.url, SERVICENOW_INSTANCE);
+  const requestUrl = new URL(req.url, 'http://localhost');
+  const routeSegments = Array.isArray(req.query.path)
+    ? req.query.path
+    : String(req.query.path || '').split('/').filter(Boolean);
+  const serviceNowPath = `/api/${routeSegments.join('/')}`;
+  const targetUrl = new URL(`${serviceNowPath}${requestUrl.search}`, SERVICENOW_INSTANCE);
   const headers = {
     Accept: req.headers.accept || 'application/json'
   };
