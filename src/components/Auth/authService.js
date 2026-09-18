@@ -1,4 +1,6 @@
-const SERVICENOW_INSTANCE = 'https://dev280910.service-now.com';
+const SERVICENOW_INSTANCE = process.env.NODE_ENV === 'development'
+  ? ''
+  : 'https://dev280910.service-now.com';
 
 const isActiveUser = (user) => user.active === true || user.active === 'true';
 

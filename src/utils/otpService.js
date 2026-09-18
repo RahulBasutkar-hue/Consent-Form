@@ -76,7 +76,7 @@ export const verifyOtp = async (rawPhone, code) => {
     throw new Error('No phone number is available for this user.');
   }
 
-  const params = new URLSearchParams({ code, phone });
+  const params = new URLSearchParams({ code: String(code).trim(), phone });
   const response = await fetch(`${OTP_API_BASE}/v1/verifications?${params.toString()}`, {
     method: 'GET',
     headers: {
@@ -86,11 +86,22 @@ export const verifyOtp = async (rawPhone, code) => {
   });
 
   if (!response.ok) {
-    throw new Error('Could not verify OTP. Try again.');
+    let detail = '';
+    try {
+      const body = await response.json();
+      detail = body?.message || body?.error || '';
+    } catch {
+      detail = '';
+    }
+    throw new Error(detail || `Could not verify OTP (${response.status}). Try again.`);
   }
 
   const body = await response.json();
-  const matches = Array.isArray(body?.data) ? body.data : [];
+  const matches = Array.isArray(body?.data)
+    ? body.data
+    : body?.data
+      ? [body.data]
+      : [];
   if (matches.length === 0) {
     throw new Error('Invalid or expired OTP.');
   }
