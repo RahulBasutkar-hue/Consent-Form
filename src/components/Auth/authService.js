@@ -1,5 +1,4 @@
-// Keep requests same-origin so the CRA and Vercel proxies handle ServiceNow calls.
-const SERVICENOW_INSTANCE = '';
+const SERVICENOW_INSTANCE = process.env.REACT_APP_SERVICENOW_INSTANCE || '';
 
 const isActiveUser = (user) => user.active === true || user.active === 'true';
 
