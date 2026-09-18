@@ -1,6 +1,7 @@
 const { createProxyMiddleware, responseInterceptor } = require('http-proxy-middleware');
 
-const SERVICENOW_HOST = 'https://dev324684.service-now.com';
+const SERVICENOW_HOST = process.env.REACT_APP_SERVICENOW_URL
+  || 'https://dev280910.service-now.com';
 
 module.exports = function (app) {
   app.use(

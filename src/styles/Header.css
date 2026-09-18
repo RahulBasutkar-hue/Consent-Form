@@ -37,12 +37,15 @@
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: #1a1a2e;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
+  background: #f6c453;
+  color: #33230a;
+  font-size: 17px;
   display: grid;
   place-items: center;
+}
+
+.logo-mark svg {
+  display: block;
 }
 
 .logo h2 {

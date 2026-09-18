@@ -84,6 +84,8 @@ export const AuthProvider = ({ children }) => {
       }
 
       setUser(result.user);
+      setPassword(submittedPassword);
+      localStorage.setItem(PASSWORD_KEY, submittedPassword);
       localStorage.setItem(USER_KEY, JSON.stringify(result.user));
 
       setProfile((current) => {
@@ -124,6 +126,11 @@ export const AuthProvider = ({ children }) => {
     });
   }, []);
 
+  const updateConsent = useCallback(
+    (hasConsent) => AuthService.updateConsent(user, password, hasConsent),
+    [user, password]
+  );
+
   const changePassword = useCallback((currentPassword, newPassword) => {
     if (currentPassword !== password) {
       return { ok: false, message: 'Current password is incorrect.' };
@@ -146,9 +153,10 @@ export const AuthProvider = ({ children }) => {
       logout,
       updateProfile,
       updateSettings,
+      updateConsent,
       changePassword
     }),
-    [user, isAuthenticated, profile, settings, login, logout, updateProfile, updateSettings, changePassword]
+    [user, isAuthenticated, profile, settings, login, logout, updateProfile, updateSettings, updateConsent, changePassword]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

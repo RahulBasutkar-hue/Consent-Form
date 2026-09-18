@@ -13,6 +13,7 @@ const OTPVerification = ({ phone = '', onClose, onVerify, onPhoneProvided }) => 
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const formattedPhone = toOtpPhone(phoneNumber);
+  
   const hasAccountPhone = Boolean(toOtpPhone(phone));
 
   const focusInput = (index) => {
@@ -121,7 +122,7 @@ const OTPVerification = ({ phone = '', onClose, onVerify, onPhoneProvided }) => 
 
     try {
       await verifyOtp(formattedPhone, otpValue);
-      onVerify(otpValue);
+      await onVerify(otpValue);
     } catch (err) {
       setError(err.message || 'OTP verification failed.');
     } finally {
