@@ -1,4 +1,5 @@
-const SERVICENOW_INSTANCE = process.env.REACT_APP_SERVICENOW_INSTANCE || '';
+// Keep ServiceNow credentials and cross-origin requests behind the local/Vercel proxy.
+const SERVICENOW_INSTANCE = '';
 
 const isActiveUser = (user) => user.active === true || user.active === 'true';
 
