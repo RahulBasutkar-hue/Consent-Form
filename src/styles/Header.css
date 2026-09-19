@@ -138,7 +138,29 @@
 }
 
 @media (max-width: 768px) {
-  .header-content { padding: 0 12px; height: 56px; }
+  .header-content {
+    min-height: 56px;
+    height: auto;
+    padding: 10px 12px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
   .header-user-block, .logo-text { display: none; }
-  .header-nav a { padding: 6px 10px; font-size: 12px; }
+
+  .header-nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .header-nav a {
+    flex: 1;
+    padding: 7px 8px;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .user-menu { margin-left: auto; }
+  .user-menu .logout-btn { padding: 7px 10px; }
 }
