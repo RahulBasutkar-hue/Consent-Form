@@ -160,6 +160,32 @@ class AuthService {
     return response.status === 204 ? null : response.json();
   }
 
+  async getAvailableCards(user, password) {
+    const username = user?.user_name;
+    if (!username || !password) {
+      throw new Error('The logged-in user credentials are unavailable. Please log in again.');
+    }
+
+    const response = await fetch(
+      `${SERVICENOW_INSTANCE}/api/x_2214700_smart_0/smart_engine_apis/cards`,
+      {
+        method: 'GET',
+        credentials: 'omit',
+        headers: {
+          Authorization: `Basic ${btoa(`${username}:${password}`)}`,
+          Accept: 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Could not load available cards (${response.status}).`);
+    }
+
+    const data = await response.json();
+    return Array.isArray(data.result) ? data.result : [];
+  }
+
   async validateCredentials(username, password) {
     try {
       const credentials = btoa(`${username}:${password}`);

@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { FiActivity, FiCheckCircle, FiClock, FiCreditCard, FiShield, FiUser } from 'react-icons/fi';
+import React, { useEffect, useMemo, useState } from 'react';
+import { FiActivity, FiCheckCircle, FiChevronLeft, FiChevronRight, FiClock, FiCreditCard, FiPhoneCall, FiShield, FiUser } from 'react-icons/fi';
 import OTPVerification from '../Auth/OTPVerification';
 import { useAuth } from '../../context/AuthContext';
 import { CONSENT_STATUS, getConsentStatus, setConsentStatus } from '../../utils/consentStore';
@@ -11,7 +11,7 @@ import {
 import '../../styles/Home.css';
 
 const Home = () => {
-  const { profile, user, updateProfile, updateConsent } = useAuth();
+  const { profile, user, updateProfile, updateConsent, getAvailableCards } = useAuth();
   const [showOTPPopup, setShowOTPPopup] = useState(false);
   const [consentUpdating, setConsentUpdating] = useState(false);
   const [consentError, setConsentError] = useState('');
@@ -25,6 +25,10 @@ const Home = () => {
   const [offerInterestSent, setOfferInterestSent] = useState(() => getCardOfferInterestSent(consentUserKey));
   const [offerInterestUpdating, setOfferInterestUpdating] = useState(false);
   const [offerInterestError, setOfferInterestError] = useState('');
+  const [availableCards, setAvailableCards] = useState([]);
+  const [cardsLoading, setCardsLoading] = useState(false);
+  const [cardsError, setCardsError] = useState('');
+  const [cardPage, setCardPage] = useState(0);
 
   const persistConsent = (status) => {
     // TODO: Replace setConsentStatus(...) with an API/DB write for this user's DPDP consent.
@@ -34,6 +38,51 @@ const Home = () => {
 
   const consentGiven = consentStatus === CONSENT_STATUS.GIVEN;
   const optedOut = consentStatus === CONSENT_STATUS.OPTED_OUT;
+  const cardsPerPage = 2;
+  const cardPageCount = Math.ceil(availableCards.length / cardsPerPage);
+  const visibleCards = availableCards.slice(
+    cardPage * cardsPerPage,
+    cardPage * cardsPerPage + cardsPerPage
+  );
+
+  useEffect(() => {
+    setCardPage((currentPage) => Math.min(currentPage, Math.max(0, cardPageCount - 1)));
+  }, [cardPageCount]);
+
+  useEffect(() => {
+    if (!consentGiven) {
+      setAvailableCards([]);
+      setCardsError('');
+      setCardPage(0);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setCardsLoading(true);
+    setCardsError('');
+
+    getAvailableCards()
+      .then((cards) => {
+        if (!cancelled) {
+          setAvailableCards(cards);
+          setCardPage(0);
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setCardsError(error.message || 'Could not load available cards.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setCardsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [consentGiven, getAvailableCards]);
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -243,6 +292,66 @@ const Home = () => {
               </span>
             </div>
 
+            <div className="available-cards" aria-live="polite">
+              <div className="available-cards-heading">
+                <div>
+                  <p className="offers-section-kicker">From our bank</p>
+                  <h3>Available credit cards</h3>
+                </div>
+                <span className="available-cards-count">
+                  {cardsLoading ? 'Loading...' : `${availableCards.length} cards`}
+                </span>
+              </div>
+
+              {cardsLoading && <p className="cards-status">Loading the latest card offers...</p>}
+              {cardsError && <p className="cards-status cards-status-error" role="alert">{cardsError}</p>}
+              {!cardsLoading && !cardsError && availableCards.length === 0 && (
+                <p className="cards-status">No card offers are available right now.</p>
+              )}
+              {!cardsLoading && !cardsError && availableCards.length > 0 && (
+                <div className="card-repeater">
+                  <button
+                    type="button"
+                    className="card-repeater-arrow"
+                    onClick={() => setCardPage((currentPage) => Math.max(0, currentPage - 1))}
+                    disabled={cardPage === 0}
+                    aria-label="Show previous cards"
+                  >
+                    <FiChevronLeft aria-hidden="true" />
+                  </button>
+                  <div className="card-offer-grid" key={cardPage}>
+                    {visibleCards.map((card) => (
+                    <article className="card-offer" key={`${card.cardName}-${card.category}`}>
+                      <div className="card-offer-topline">
+                        <span className="card-offer-category">{card.category}</span>
+                        <FiCreditCard aria-hidden="true" />
+                      </div>
+                      <h4>{card.cardName}</h4>
+                      <div className="card-offer-score">
+                        <span>Recommended credit score</span>
+                        <strong>{card.creditScoreRequired}+</strong>
+                      </div>
+                    </article>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="card-repeater-arrow"
+                    onClick={() => setCardPage((currentPage) => Math.min(cardPageCount - 1, currentPage + 1))}
+                    disabled={cardPage >= cardPageCount - 1}
+                    aria-label="Show next cards"
+                  >
+                    <FiChevronRight aria-hidden="true" />
+                  </button>
+                </div>
+              )}
+              {!cardsLoading && !cardsError && cardPageCount > 1 && (
+                <p className="card-repeater-page" aria-live="polite">
+                  Showing {cardPage * cardsPerPage + 1}-{Math.min((cardPage + 1) * cardsPerPage, availableCards.length)} of {availableCards.length}
+                </p>
+              )}
+            </div>
+
             {offerInterestSent ? (
               <div className="inline-alert success" role="status">
                 We’ve recorded your interest. Someone will follow up with card offers.
@@ -251,19 +360,18 @@ const Home = () => {
               <div className="offers-body">
                 <div className="offers-copy">
                   <div className="metric-icon metric-icon-offers">
-                    <FiCreditCard />
+                    <FiPhoneCall aria-hidden="true" />
                   </div>
-                  <p>
-                    This is not an application. It only lets the team know you want to hear about offers.
-                  </p>
                 </div>
                 <button
                   type="button"
                   className="primary-btn"
                   onClick={handleCardOfferInterest}
                   disabled={offerInterestUpdating}
+                  aria-label="Contact bank for offers"
                 >
-                  {offerInterestUpdating ? 'Sending...' : 'Know my card offers'}
+                  <FiPhoneCall aria-hidden="true" />
+                  {offerInterestUpdating ? 'Sending...' : 'Contact bank for offers'}
                 </button>
               </div>
             )}

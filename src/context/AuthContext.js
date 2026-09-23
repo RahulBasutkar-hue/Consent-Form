@@ -131,6 +131,11 @@ export const AuthProvider = ({ children }) => {
     [user, password]
   );
 
+  const getAvailableCards = useCallback(
+    () => AuthService.getAvailableCards(user, password),
+    [user, password]
+  );
+
   const changePassword = useCallback((currentPassword, newPassword) => {
     if (currentPassword !== password) {
       return { ok: false, message: 'Current password is incorrect.' };
@@ -154,9 +159,10 @@ export const AuthProvider = ({ children }) => {
       updateProfile,
       updateSettings,
       updateConsent,
+      getAvailableCards,
       changePassword
     }),
-    [user, isAuthenticated, profile, settings, login, logout, updateProfile, updateSettings, updateConsent, changePassword]
+    [user, isAuthenticated, profile, settings, login, logout, updateProfile, updateSettings, updateConsent, getAvailableCards, changePassword]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
