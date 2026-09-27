@@ -1,6 +1,6 @@
 {
-  "short_name": "Laxmi Chit Fund",
-  "name": "Laxmi Chit Fund",
+  "short_name": "Arjun Capital",
+  "name": "Arjun Capital",
   "icons": [
     {
       "src": "bank-logo.svg",
@@ -20,6 +20,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#3538cd",
+  "theme_color": "#111a2e",
   "background_color": "#f8fafc"
 }

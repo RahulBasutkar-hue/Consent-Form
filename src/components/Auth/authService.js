@@ -186,6 +186,41 @@ class AuthService {
     return Array.isArray(data.result) ? data.result : [];
   }
 
+  async updateOfferInterest(user, password) {
+    const username = user?.user_name;
+    const sysId = user?.sys_id;
+    if (!username || !password || !sysId) {
+      throw new Error('The logged-in user credentials are unavailable. Please log in again.');
+    }
+
+    const response = await fetch(
+      `${SERVICENOW_INSTANCE}/api/x_2214700_smart_0/smart_engine_apis/customer/${encodeURIComponent(sysId)}/offer_details`,
+      {
+        method: 'PUT',
+        credentials: 'omit',
+        headers: {
+          Authorization: `Basic ${btoa(`${username}:${password}`)}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify({ needs_offer_details: true })
+      }
+    );
+
+    let data = null;
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok || data?.result?.status !== 'success') {
+      throw new Error(data?.result?.message || `Could not record offer interest (${response.status}).`);
+    }
+
+    return data;
+  }
+
   async validateCredentials(username, password) {
     try {
       const credentials = btoa(`${username}:${password}`);

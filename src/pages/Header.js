@@ -1,6 +1,5 @@
 import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { FaUniversity } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Header.css';
 
@@ -24,12 +23,10 @@ const Header = () => {
     <header className="app-header">
       <div className="header-content">
         <div className="logo">
-          <span className="logo-mark" aria-label="Bank logo">
-            <FaUniversity aria-hidden="true" />
-          </span>
+          <span className="logo-mark" aria-label="Arjun Capital logo">ARJ</span>
           <div className="logo-text">
-            <h2>Laxmi Chit Fund</h2>
-            <span>Trusted financial services</span>
+            <h2>Arjun Capital</h2>
+            <span>Smart Engagement Engine</span>
           </div>
         </div>
 

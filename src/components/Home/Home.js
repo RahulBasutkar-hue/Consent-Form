@@ -3,15 +3,11 @@ import { FiActivity, FiCheckCircle, FiChevronLeft, FiChevronRight, FiClock, FiCr
 import OTPVerification from '../Auth/OTPVerification';
 import { useAuth } from '../../context/AuthContext';
 import { CONSENT_STATUS, getConsentStatus, setConsentStatus } from '../../utils/consentStore';
-import {
-  getCardOfferInterestSent,
-  setCardOfferInterestSent,
-  submitCardOfferInterest
-} from '../../utils/cardInterest';
+import { getCardOfferInterestSent, setCardOfferInterestSent } from '../../utils/cardInterest';
 import '../../styles/Home.css';
 
 const Home = () => {
-  const { profile, user, updateProfile, updateConsent, getAvailableCards } = useAuth();
+  const { profile, user, updateProfile, updateConsent, getAvailableCards, updateOfferInterest } = useAuth();
   const [showOTPPopup, setShowOTPPopup] = useState(false);
   const [consentUpdating, setConsentUpdating] = useState(false);
   const [consentError, setConsentError] = useState('');
@@ -108,17 +104,7 @@ const Home = () => {
     setOfferInterestUpdating(true);
     setOfferInterestError('');
     try {
-      const result = await submitCardOfferInterest({
-        sys_id: user?.sys_id,
-        user_name: profile.username || user?.user_name,
-        email: profile.email || user?.email,
-        name: displayName,
-        intent: 'credit_card_offers'
-      });
-
-      if (!result?.ok) {
-        throw new Error(result?.message || 'Could not record your interest. Try again.');
-      }
+      await updateOfferInterest();
 
       setCardOfferInterestSent(consentUserKey, true);
       setOfferInterestSent(true);
@@ -354,15 +340,10 @@ const Home = () => {
 
             {offerInterestSent ? (
               <div className="inline-alert success" role="status">
-                We’ve recorded your interest. Someone will follow up with card offers.
+                Someone from the bank will connect shortly with the best offers for you.
               </div>
             ) : (
               <div className="offers-body">
-                <div className="offers-copy">
-                  <div className="metric-icon metric-icon-offers">
-                    <FiPhoneCall aria-hidden="true" />
-                  </div>
-                </div>
                 <button
                   type="button"
                   className="primary-btn"
