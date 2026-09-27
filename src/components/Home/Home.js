@@ -123,7 +123,7 @@ const Home = () => {
       await updateConsent(false);
       persistConsent(CONSENT_STATUS.OPTED_OUT);
       setShowOTPPopup(false);
-      pushActivity('Consent opted out', 'Credit card transaction data will not be used');
+      pushActivity('Consent opted out', 'Transaction data will not be used');
     } catch (error) {
       setConsentError(error.message || 'Could not update consent. Try again.');
     } finally {
@@ -201,7 +201,7 @@ const Home = () => {
               <div className="verification-header-copy">
                 <h2>Identity verification</h2>
                 <p>
-                  Consent to use your credit card transaction data, then confirm with a one-time passcode.
+                  Consent to use your transaction data, then confirm with a one-time passcode.
                 </p>
               </div>
               <span
@@ -217,7 +217,7 @@ const Home = () => {
               <div className="consent-notice">
                 <p className="consent-kicker">DPDP Act, 2023</p>
                 <p>
-                  This consent is limited to the use of your <strong>credit card transaction data</strong>
+                  This consent is limited to the use of your <strong>transaction data</strong>
                   solely for identity verification, fraud screening, and related protected workflows as
                   permitted under the Digital Personal Data Protection Act, 2023. Your data will be used
                   only for the stated verification purpose, retained only as long as necessary, and not
@@ -228,12 +228,12 @@ const Home = () => {
 
               {consentGiven ? (
                 <div className="inline-alert success" role="status">
-                  Already verified. Consent is given to use your credit card transaction data.
+                  Already verified. Consent is given to use your transaction data.
                 </div>
               ) : optedOut ? (
                 <div className="consent-optout-block">
                   <div className="inline-alert muted" role="status">
-                    You opted out. We will not use your credit card transaction data, and OTP verification
+                    You opted out. We will not use your transaction data, and OTP verification
                     will not be requested.
                   </div>
                   <div className="consent-actions">
@@ -306,19 +306,32 @@ const Home = () => {
                     <FiChevronLeft aria-hidden="true" />
                   </button>
                   <div className="card-offer-grid" key={cardPage}>
-                    {visibleCards.map((card) => (
-                    <article className="card-offer" key={`${card.cardName}-${card.category}`}>
+                    {visibleCards.map((card, index) => {
+                    const cardNumber = `4532 **** **** ${String(1048 + (cardPage * cardsPerPage + index) * 137).slice(-4)}`;
+                    const cardTheme = `card-offer-theme-${(cardPage * cardsPerPage + index) % 4}`;
+                    return (
+                    <article className={`card-offer ${cardTheme}`} key={`${card.cardName}-${card.category}`}>
                       <div className="card-offer-topline">
                         <span className="card-offer-category">{card.category}</span>
                         <FiCreditCard aria-hidden="true" />
                       </div>
+                      <div className="card-offer-brand">
+                        <span>NOVA BANK</span>
+                        <strong>{index % 2 === 0 ? 'VISA' : 'WORLD'}</strong>
+                      </div>
+                      <div className="card-offer-chip-row">
+                        <span className="card-offer-chip" aria-hidden="true" />
+                        <span className="card-offer-contactless" aria-hidden="true">)))</span>
+                      </div>
+                      <p className="card-offer-number">{cardNumber}</p>
                       <h4>{card.cardName}</h4>
                       <div className="card-offer-score">
                         <span>Recommended credit score</span>
                         <strong>{card.creditScoreRequired}+</strong>
                       </div>
                     </article>
-                    ))}
+                    );
+                    })}
                   </div>
                   <button
                     type="button"
@@ -393,7 +406,7 @@ const Home = () => {
           onVerify={async () => {
             await updateConsent(true);
             persistConsent(CONSENT_STATUS.GIVEN);
-            pushActivity('Consent given', 'OTP verified for credit card transaction data');
+            pushActivity('Consent given', 'OTP verified for transaction data');
             setShowOTPPopup(false);
           }}
         />

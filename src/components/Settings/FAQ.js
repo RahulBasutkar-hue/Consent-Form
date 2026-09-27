@@ -8,36 +8,40 @@ const FAQ = () => {
 
   const faqData = [
     {
-      question: 'How do I reset my password?',
-      answer: 'Open Settings > Security and use Change Password. Demo current password starts as password123 unless you already changed it.'
+      question: 'Why do you need consent to use my transaction data?',
+      answer: 'Consent allows the bank to use your transaction data for identity verification, fraud screening, and related protected workflows. It is limited to these stated purposes and is not used for unrelated marketing or profiling.'
     },
     {
-      question: 'How does OTP verification work?',
-      answer: 'From Home, choose Give consent to send a 4-digit OTP to the phone on your account, or Opt-out to skip it.'
+      question: 'How do I give consent?',
+      answer: 'Open Home, select Give consent, and confirm the one-time passcode sent to the phone number on your account. Consent is recorded only after the OTP is verified.'
     },
     {
-      question: 'Can I change my profile information?',
-      answer: 'Yes. Go to Profile, click Edit Profile, update your details, then Save. Changes stay in this browser.'
+      question: 'What happens if I opt out?',
+      answer: 'Your transaction data will not be used for the verification workflow, and an OTP will not be requested. You can choose to give consent later from Home.'
     },
     {
-      question: 'How do I enable dark mode?',
-      answer: 'Go to Settings > General and toggle Dark Mode.'
+      question: 'Why is an OTP required?',
+      answer: 'The OTP confirms that you control the phone number linked to your account before consent is recorded. The code is four digits and expires according to the verification flow.'
     },
     {
-      question: 'What is two-factor authentication?',
-      answer: 'Two-factor authentication adds a second verification step. Toggle it in Settings > Security, then complete the OTP flow from Home.'
+      question: 'How is my transaction data handled?',
+      answer: 'The data is used only for the stated verification purpose, retained only as long as necessary, and not processed for unrelated marketing, profiling, or secondary use without additional consent.'
+    },
+    {
+      question: 'How do credit card offers work?',
+      answer: 'After verification, Home can show available card offers and their recommended credit scores. Select Contact bank for offers if you want the team to follow up with suitable options.'
+    },
+    {
+      question: 'Can I update my profile details?',
+      answer: 'Yes. Open Profile, choose Edit Profile, update the available fields, and save your changes. Your profile information helps the team contact you about account and offer requests.'
+    },
+    {
+      question: 'How do I change my password?',
+      answer: 'Open Settings and go to Security. Enter your current password and a new password, then submit the form. You can log in again with the updated password.'
     },
     {
       question: 'How do I contact support?',
-      answer: 'Use Contact Support below, or the feedback option in Settings > About.'
-    },
-    {
-      question: 'Is my data secure?',
-      answer: 'This demo stores login session and profile data only in localStorage on your machine.'
-    },
-    {
-      question: 'How do I delete my account?',
-      answer: 'This demo has no server account. Use Logout to end the session.'
+      answer: 'Use the Contact Support button below the FAQs. A support request will be recorded and the team will reply using the email on your profile.'
     }
   ];
 

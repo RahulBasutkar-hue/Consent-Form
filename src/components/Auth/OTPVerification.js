@@ -138,7 +138,7 @@ const OTPVerification = ({ phone = '', onClose, onVerify, onPhoneProvided }) => 
           <button type="button" className="close-btn" onClick={onClose}>×</button>
         </div>
         <p className="otp-hint">
-          Confirm consent to use credit card transaction data. A 4-digit code will be sent to the
+          Confirm consent to use transaction data. A 4-digit code will be sent to the
           phone on this account.
         </p>
 

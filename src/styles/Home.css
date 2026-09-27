@@ -351,10 +351,10 @@
 
 .available-cards {
   margin-bottom: 24px;
-  padding: 20px;
-  border: 1px solid rgba(170, 182, 209, 0.28);
-  border-radius: 14px;
-  background: rgba(22, 26, 33, 0.5);
+  padding: 24px;
+  border: 1px solid #dbe5f0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f7fbff 0%, #eef5fb 100%);
 }
 
 .available-cards-heading {
@@ -367,7 +367,7 @@
 
 .offers-section-kicker {
   margin: 0 0 4px;
-  color: #b6c9ff;
+  color: #167c80;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -376,14 +376,14 @@
 
 .available-cards h3 {
   margin: 0;
-  color: #f6f8ff;
+  color: #172b4d;
   font-size: 18px;
   letter-spacing: -0.02em;
 }
 
 .available-cards-count {
   flex-shrink: 0;
-  color: #c9d3ea;
+  color: #526581;
   font-size: 12px;
   font-weight: 700;
 }
@@ -398,7 +398,7 @@
 .card-offer-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 18px;
   animation: card-page-enter 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -419,17 +419,18 @@
   width: 36px;
   height: 36px;
   padding: 0;
-  border: 1px solid rgba(170, 182, 209, 0.35);
+  border: 1px solid #cbd8e6;
   border-radius: 50%;
-  background: rgba(67, 77, 95, 0.75);
-  color: #f6f8ff;
+  background: #ffffff;
+  color: #1e4268;
   cursor: pointer;
 }
 
 .card-repeater-arrow:hover:not(:disabled),
 .card-repeater-arrow:focus-visible {
-  background: #b6c9ff;
-  color: #1d2432;
+  background: #167c80;
+  border-color: #167c80;
+  color: #ffffff;
   outline: none;
 }
 
@@ -439,19 +440,62 @@
 }
 
 .card-offer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  padding: 16px;
-  border: 1px solid rgba(170, 182, 209, 0.24);
-  border-radius: 12px;
-  background: linear-gradient(145deg, rgba(67, 77, 95, 0.7), rgba(39, 45, 56, 0.85));
+  min-height: 220px;
+  overflow: hidden;
+  padding: 22px;
+  border: 1px solid #304b6b;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #1f3a5b 0%, #172b4d 62%, #10233d 100%);
+  box-shadow: 0 12px 24px rgba(23, 43, 77, 0.18);
   transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.card-offer::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #59c3b5, #8ed4ff);
+  content: '';
+}
+
+.card-offer-theme-1 {
+  background: linear-gradient(145deg, #7d2d3b 0%, #541e32 62%, #351627 100%);
+  border-color: #a54d5b;
+}
+
+.card-offer-theme-2 {
+  background: linear-gradient(145deg, #167c80 0%, #125c68 62%, #0d3f4c 100%);
+  border-color: #43a9a5;
+}
+
+.card-offer-theme-3 {
+  background: linear-gradient(145deg, #66502a 0%, #49391f 62%, #2f2619 100%);
+  border-color: #a88a4c;
+}
+
+.card-offer-theme-1::before {
+  background: linear-gradient(90deg, #ffb36b, #ffd28a);
+}
+
+.card-offer-theme-2::before {
+  background: linear-gradient(90deg, #9be6c3, #d1f5e2);
+}
+
+.card-offer-theme-3::before {
+  background: linear-gradient(90deg, #f4c76b, #ffe5a3);
 }
 
 .card-offer:hover,
 .card-offer:focus-within {
-  transform: translateY(-4px);
-  border-color: rgba(182, 201, 255, 0.8);
-  box-shadow: 0 12px 24px rgba(8, 12, 20, 0.28);
+  transform: translateY(-5px);
+  border-color: #76cfc4;
+  box-shadow: 0 18px 30px rgba(23, 43, 77, 0.24);
 }
 
 .card-offer-topline,
@@ -463,36 +507,87 @@
 }
 
 .card-offer-topline {
-  color: #b9c8e8;
-  font-size: 16px;
+  color: #c7e2ef;
+  font-size: 18px;
 }
 
 .card-offer-category {
-  color: #b6c9ff;
+  color: #8ed4ff;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.card-offer h4 {
-  min-height: 44px;
-  margin: 18px 0 16px;
+.card-offer-brand {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.card-offer-brand strong {
+  font-size: 14px;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+.card-offer-chip-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.card-offer-chip {
+  width: 34px;
+  height: 25px;
+  border: 1px solid rgba(111, 73, 24, 0.45);
+  border-radius: 6px;
+  background: linear-gradient(135deg, #f5d995, #b98135);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.card-offer-contactless {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  letter-spacing: -0.16em;
+  transform: rotate(-90deg);
+}
+
+.card-offer-number {
+  margin: 14px 0 0;
   color: #ffffff;
-  font-size: 15px;
-  line-height: 1.45;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.card-offer h4 {
+  min-height: 26px;
+  margin: 16px 0 20px;
+  color: #ffffff;
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
 }
 
 .card-offer-score {
+  margin-top: auto;
   padding-top: 12px;
-  border-top: 1px solid rgba(170, 182, 209, 0.2);
-  color: #c9d3ea;
-  font-size: 11px;
+  border-top: 1px solid rgba(196, 225, 239, 0.22);
+  color: #c7d7e9;
+  font-size: 12px;
 }
 
 .card-offer-score strong {
   color: #ffffff;
-  font-size: 16px;
+  font-size: 21px;
 }
 
 .cards-status {
@@ -507,7 +602,7 @@
 
 .card-repeater-page {
   margin: 14px 0 0;
-  color: #b9c8e8;
+  color: #526581;
   font-size: 12px;
   text-align: center;
 }
