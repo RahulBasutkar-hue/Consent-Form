@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { FiAlertCircle, FiCheckCircle, FiLock, FiShield, FiX } from 'react-icons/fi';
 import { OTP_CODE_LENGTH, maskPhone, sendOtp, toOtpPhone, verifyOtp } from '../../utils/otpService';
 import '../../styles/OTPVerification.css';
 
@@ -131,16 +132,20 @@ const OTPVerification = ({ phone = '', onClose, onVerify, onPhoneProvided }) => 
   };
 
   return (
-    <div className="otp-overlay">
+    <div className="otp-overlay" role="dialog" aria-modal="true" aria-labelledby="otp-title">
       <div className="otp-popup">
+        <button type="button" className="close-btn" onClick={onClose} aria-label="Close">
+          <FiX aria-hidden="true" />
+        </button>
+
         <div className="otp-header">
-          <h3>Enter OTP</h3>
-          <button type="button" className="close-btn" onClick={onClose}>×</button>
+          <span className="otp-header-icon" aria-hidden="true"><FiShield /></span>
+          <h3 id="otp-title">Verify it’s you</h3>
+          <p className="otp-hint">
+            Confirm consent to use transaction data. A 4-digit code will be sent to the
+            phone on this account.
+          </p>
         </div>
-        <p className="otp-hint">
-          Confirm consent to use transaction data. A 4-digit code will be sent to the
-          phone on this account.
-        </p>
 
         <form onSubmit={handleSubmit}>
           {!hasAccountPhone && !phoneSubmitted ? (
@@ -148,6 +153,7 @@ const OTPVerification = ({ phone = '', onClose, onVerify, onPhoneProvided }) => 
               <label htmlFor="consent-phone">Phone number</label>
               <input
                 id="consent-phone"
+                className="text-input"
                 type="tel"
                 inputMode="tel"
                 placeholder="Enter your phone number"
@@ -155,6 +161,7 @@ const OTPVerification = ({ phone = '', onClose, onVerify, onPhoneProvided }) => 
                 onChange={handlePhoneChange}
                 disabled={sending || verifying}
               />
+              {error && <p className="otp-message info" role="status"><FiAlertCircle aria-hidden="true" /> {error}</p>}
               <button
                 type="button"
                 className="verify-btn"
@@ -178,27 +185,36 @@ const OTPVerification = ({ phone = '', onClose, onVerify, onPhoneProvided }) => 
                     value={digit}
                     onChange={(e) => handleChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    className="otp-input"
+                    className={`otp-input ${digit ? 'filled' : ''} ${error ? 'has-error' : ''}`}
                     disabled={verifying}
+                    aria-label={`Digit ${index + 1}`}
                   />
                 ))}
               </div>
-              {info && <p className="form-message success">{info}</p>}
-              {error && <p className="form-message error">{error}</p>}
+              {info && <p className="otp-message success"><FiCheckCircle aria-hidden="true" /> {info}</p>}
+              {error && <p className="otp-message error" role="alert"><FiAlertCircle aria-hidden="true" /> {error}</p>}
               <button type="submit" className="verify-btn" disabled={verifying || sending}>
+                {verifying && <span className="btn-spinner" aria-hidden="true" />}
                 {verifying ? 'Verifying...' : 'Verify OTP'}
               </button>
-              <button
-                type="button"
-                className="resend-otp-btn"
-                onClick={handleSend}
-                disabled={sending || verifying}
-              >
-                {sending ? 'Sending...' : 'Resend OTP'}
-              </button>
+              <p className="otp-resend">
+                Didn’t receive the code?{' '}
+                <button
+                  type="button"
+                  className="resend-otp-btn"
+                  onClick={handleSend}
+                  disabled={sending || verifying}
+                >
+                  {sending ? 'Sending...' : 'Resend OTP'}
+                </button>
+              </p>
             </>
           )}
         </form>
+
+        <p className="otp-footnote">
+          <FiLock aria-hidden="true" /> Protected under the DPDP Act, 2023
+        </p>
       </div>
     </div>
   );

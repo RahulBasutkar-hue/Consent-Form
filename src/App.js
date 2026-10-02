@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Navigate, Routes, Route } from 'react-router-dom';
+// Shared UI styles load first so page stylesheets can refine them.
+import './styles/App.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Header from './pages/Header';
@@ -7,7 +9,6 @@ import Login from './components/Auth/Login';
 import Home from './components/Home/Home';
 import MyProfile from './components/Profile/MyProfile';
 import Settings from './components/Settings/Settings';
-import './styles/App.css';
 
 const LoginRoute = () => {
   const { isAuthenticated } = useAuth();

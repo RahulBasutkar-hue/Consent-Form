@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiEye, FiEyeOff, FiLock, FiShield, FiSmartphone, FiUser, FiUserCheck } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/Login.css';
 
@@ -12,6 +13,7 @@ const Login = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setError('');
@@ -39,46 +41,113 @@ const Login = () => {
 
   return (
     <div className="login-container">
-      <div className="login-brand">
-        <span className="login-brand-mark" aria-hidden="true">
-          ARJ
-        </span>
-        <h1>Arjun Capital</h1>
-        <p>Smart Engagement Engine</p>
-      </div>
-      <div className="login-form">
-        <h2>Login</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <input
-              type="text"
-              name="username"
-              placeholder="Username"
-              value={formData.username}
-              onChange={handleChange}
-              autoComplete="username"
-              required
-              disabled={loading}
-            />
+      <aside className="login-brand">
+        <div className="login-brand-top">
+          <span className="login-brand-mark" aria-hidden="true">
+            ARJ
+          </span>
+          <div>
+            <h1>Arjun Capital</h1>
+            <p>Smart Engagement Engine</p>
           </div>
-          <div className="form-group">
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              autoComplete="current-password"
-              required
-              disabled={loading}
-            />
+        </div>
+
+        <div className="login-brand-body">
+          <h2>Your data, your choice.</h2>
+          <p className="login-brand-lead">
+            Manage how your transaction data is used and discover offers made for you — securely, in one place.
+          </p>
+          <ul className="login-trust">
+            <li>
+              <span className="login-trust-icon"><FiShield aria-hidden="true" /></span>
+              <div>
+                <strong>DPDP Act compliant</strong>
+                <span>Consent handled under the DPDP Act, 2023</span>
+              </div>
+            </li>
+            <li>
+              <span className="login-trust-icon"><FiSmartphone aria-hidden="true" /></span>
+              <div>
+                <strong>OTP-secured consent</strong>
+                <span>Every consent is confirmed on your phone</span>
+              </div>
+            </li>
+            <li>
+              <span className="login-trust-icon"><FiUserCheck aria-hidden="true" /></span>
+              <div>
+                <strong>Opt out any time</strong>
+                <span>Withdraw consent with a single click</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <p className="login-brand-foot">© {new Date().getFullYear()} Arjun Capital. All rights reserved.</p>
+      </aside>
+
+      <main className="login-panel">
+        <div className="login-form">
+          <div className="login-form-head">
+            <h2>Sign in</h2>
+            <p>Use your Arjun Capital credentials to continue.</p>
           </div>
-          {error && <p className="form-message error">{error}</p>}
-          <button type="submit" className="login-btn" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-      </div>
+
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="login-username">Username</label>
+              <div className="input-wrap">
+                <FiUser className="input-icon" aria-hidden="true" />
+                <input
+                  id="login-username"
+                  type="text"
+                  name="username"
+                  placeholder="Enter your username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  autoComplete="username"
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label htmlFor="login-password">Password</label>
+              <div className="input-wrap">
+                <FiLock className="input-icon" aria-hidden="true" />
+                <input
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  autoComplete="current-password"
+                  required
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  className="input-toggle"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <FiEyeOff aria-hidden="true" /> : <FiEye aria-hidden="true" />}
+                </button>
+              </div>
+            </div>
+            {error && <p className="form-message error login-error" role="alert">{error}</p>}
+            <button type="submit" className="login-btn" disabled={loading}>
+              {loading && <span className="btn-spinner" aria-hidden="true" />}
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </form>
+
+          <p className="login-secure-note">
+            <FiLock aria-hidden="true" /> Secured connection
+          </p>
+        </div>
+      </main>
     </div>
   );
 };

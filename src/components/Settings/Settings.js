@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { FiHelpCircle, FiInfo, FiLock, FiSliders } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { FiAlertCircle, FiCheckCircle, FiChevronRight, FiHelpCircle, FiInfo, FiLock, FiLogOut, FiSliders } from 'react-icons/fi';
+import { useLocation, useNavigate } from 'react-router-dom';
 import FAQ from './FAQ';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/Settings.css';
@@ -20,8 +20,9 @@ const SettingToggle = ({ title, description, checked, onChange }) => (
 
 const Settings = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { settings, updateSettings, changePassword, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('general');
+  const [activeTab, setActiveTab] = useState(() => location.state?.tab || 'general');
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('success');
   const [passwordForm, setPasswordForm] = useState({
@@ -193,7 +194,7 @@ const Settings = () => {
                   <p className="setting-copy">Sign out of this workspace on the current device.</p>
                 </div>
                 <button type="button" className="danger-btn" onClick={handleLogoutAll}>
-                  Logout from all devices
+                  <FiLogOut aria-hidden="true" /> Logout from all devices
                 </button>
               </div>
             </div>
@@ -251,21 +252,28 @@ const Settings = () => {
     }
   };
 
+  const tabs = [
+    { id: 'general', label: 'General', hint: 'Appearance & preferences', icon: FiSliders },
+    { id: 'security', label: 'Security', hint: 'Password & sessions', icon: FiLock },
+    { id: 'faq', label: 'FAQ', hint: 'Help with consent & offers', icon: FiHelpCircle },
+    { id: 'about', label: 'About', hint: 'App info & legal', icon: FiInfo }
+  ];
+
   return (
     <div className="settings-container">
       <div className="settings-page">
         <nav className="page-breadcrumb" aria-label="Breadcrumb">
-          <span>Workspace</span>
+          <span>Arjun Capital</span>
           <span className="page-breadcrumb-sep">/</span>
           <span className="page-breadcrumb-current">Settings</span>
         </nav>
 
-        <header className="settings-hero">
+        <header className="page-hero">
           <div>
-            <p className="settings-kicker">Administration</p>
+            <p className="page-kicker">Preferences</p>
             <h1>Settings</h1>
-            <p className="settings-subtitle">
-              Manage preferences, security, and workspace information for this account.
+            <p className="page-subtitle">
+              Manage preferences, security, and information for your account.
             </p>
           </div>
         </header>
@@ -273,25 +281,30 @@ const Settings = () => {
         <div className="settings-layout">
           <aside className="settings-sidebar">
             <nav className="settings-nav" aria-label="Settings sections">
-              <button type="button" className={activeTab === 'general' ? 'active' : ''} onClick={() => openTab('general')}>
-                <FiSliders /> General
-              </button>
-              <button type="button" className={activeTab === 'security' ? 'active' : ''} onClick={() => openTab('security')}>
-                <FiLock /> Security
-              </button>
-              <button type="button" className={activeTab === 'faq' ? 'active' : ''} onClick={() => openTab('faq')}>
-                <FiHelpCircle /> FAQ
-              </button>
-              <button type="button" className={activeTab === 'about' ? 'active' : ''} onClick={() => openTab('about')}>
-                <FiInfo /> About
-              </button>
+              {tabs.map(({ id, label, hint, icon: Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={activeTab === id ? 'active' : ''}
+                  onClick={() => openTab(id)}
+                  aria-current={activeTab === id ? 'page' : undefined}
+                >
+                  <span className="settings-nav-icon"><Icon aria-hidden="true" /></span>
+                  <span className="settings-nav-text">
+                    <span className="settings-nav-label">{label}</span>
+                    <span className="settings-nav-hint">{hint}</span>
+                  </span>
+                  <FiChevronRight className="settings-nav-caret" aria-hidden="true" />
+                </button>
+              ))}
             </nav>
           </aside>
 
           <div className="settings-main">
             {message && (
-              <div className={`inline-alert ${messageType === 'error' ? 'error' : 'success'}`} role="status">
-                {message}
+              <div className={`inline-alert settings-alert ${messageType === 'error' ? 'error' : 'success'}`} role="status">
+                {messageType === 'error' ? <FiAlertCircle aria-hidden="true" /> : <FiCheckCircle aria-hidden="true" />}
+                <span>{message}</span>
               </div>
             )}
             {renderTabContent()}

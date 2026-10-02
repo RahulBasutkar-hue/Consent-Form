@@ -1,9 +1,34 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { FiActivity, FiCheckCircle, FiChevronLeft, FiChevronRight, FiClock, FiCreditCard, FiPhoneCall, FiShield, FiUser } from 'react-icons/fi';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  FiAlertCircle,
+  FiArrowRight,
+  FiCalendar,
+  FiCheck,
+  FiCheckCircle,
+  FiChevronLeft,
+  FiChevronRight,
+  FiClock,
+  FiCreditCard,
+  FiFileText,
+  FiHelpCircle,
+  FiInfo,
+  FiLock,
+  FiPhoneCall,
+  FiShield,
+  FiUser,
+  FiX
+} from 'react-icons/fi';
 import OTPVerification from '../Auth/OTPVerification';
 import { useAuth } from '../../context/AuthContext';
 import { CONSENT_STATUS, getConsentStatus, setConsentStatus } from '../../utils/consentStore';
-import { getCardOfferInterestSent, setCardOfferInterestSent } from '../../utils/cardInterest';
+import {
+  addInterestedCardKey,
+  getCardKey,
+  getCardOfferInterestSent,
+  getInterestedCardKeys,
+  setCardOfferInterestSent
+} from '../../utils/cardInterest';
 import '../../styles/Home.css';
 
 const Home = () => {
@@ -20,11 +45,14 @@ const Home = () => {
   const [consentStatus, setConsentStatusState] = useState(() => getConsentStatus(consentUserKey));
   const [offerInterestSent, setOfferInterestSent] = useState(() => getCardOfferInterestSent(consentUserKey));
   const [offerInterestUpdating, setOfferInterestUpdating] = useState(false);
+  const [interestCardKey, setInterestCardKey] = useState('');
+  const [interestedCardKeys, setInterestedCardKeys] = useState(() => getInterestedCardKeys(consentUserKey));
   const [offerInterestError, setOfferInterestError] = useState('');
   const [availableCards, setAvailableCards] = useState([]);
   const [cardsLoading, setCardsLoading] = useState(false);
   const [cardsError, setCardsError] = useState('');
-  const [cardPage, setCardPage] = useState(0);
+  const cardScrollerRef = useRef(null);
+  const [cardScroll, setCardScroll] = useState({ atStart: true, atEnd: true });
 
   const persistConsent = (status) => {
     // TODO: Replace setConsentStatus(...) with an API/DB write for this user's DPDP consent.
@@ -34,22 +62,34 @@ const Home = () => {
 
   const consentGiven = consentStatus === CONSENT_STATUS.GIVEN;
   const optedOut = consentStatus === CONSENT_STATUS.OPTED_OUT;
-  const cardsPerPage = 2;
-  const cardPageCount = Math.ceil(availableCards.length / cardsPerPage);
-  const visibleCards = availableCards.slice(
-    cardPage * cardsPerPage,
-    cardPage * cardsPerPage + cardsPerPage
-  );
+  // Horizontal card carousel: track whether we can scroll further either way.
+  const updateCardScroll = useCallback(() => {
+    const el = cardScrollerRef.current;
+    if (!el) return;
+    setCardScroll({
+      atStart: el.scrollLeft <= 4,
+      atEnd: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4
+    });
+  }, []);
+
+  const scrollCards = (direction) => {
+    const el = cardScrollerRef.current;
+    if (!el) return;
+    const firstCard = el.querySelector('.card-offer-item');
+    const step = firstCard ? firstCard.getBoundingClientRect().width + 20 : el.clientWidth * 0.8;
+    el.scrollBy({ left: direction * step, behavior: 'smooth' });
+  };
 
   useEffect(() => {
-    setCardPage((currentPage) => Math.min(currentPage, Math.max(0, cardPageCount - 1)));
-  }, [cardPageCount]);
+    updateCardScroll();
+    window.addEventListener('resize', updateCardScroll);
+    return () => window.removeEventListener('resize', updateCardScroll);
+  }, [availableCards, cardsLoading, updateCardScroll]);
 
   useEffect(() => {
     if (!consentGiven) {
       setAvailableCards([]);
       setCardsError('');
-      setCardPage(0);
       return undefined;
     }
 
@@ -61,7 +101,6 @@ const Home = () => {
       .then((cards) => {
         if (!cancelled) {
           setAvailableCards(cards);
-          setCardPage(0);
         }
       })
       .catch((error) => {
@@ -96,25 +135,37 @@ const Home = () => {
     ].slice(0, 5));
   };
 
-  const handleCardOfferInterest = async () => {
-    if (!consentGiven) {
+  const handleCardOfferInterest = async (card) => {
+    if (!consentGiven || offerInterestUpdating) {
       return;
     }
 
+    const cardKey = getCardKey(card);
     setOfferInterestUpdating(true);
+    setInterestCardKey(cardKey);
     setOfferInterestError('');
     try {
+      // Same ServiceNow call as before (needs_offer_details: true).
       await updateOfferInterest();
 
       setCardOfferInterestSent(consentUserKey, true);
       setOfferInterestSent(true);
-      pushActivity('Card offers', 'Interest recorded for credit card offers');
+      addInterestedCardKey(consentUserKey, cardKey);
+      setInterestedCardKeys((current) => (current.includes(cardKey) ? current : [...current, cardKey]));
+      pushActivity('Card offers', `Interest recorded for ${card?.cardName || 'a credit card'}`);
     } catch (error) {
-      setOfferInterestError(error.message || 'Could not record your interest. Try again.');
+      setOfferInterestError(
+        `${card?.cardName ? `${card.cardName}: ` : ''}${error.message || 'Could not record your interest. Try again.'}`
+      );
     } finally {
       setOfferInterestUpdating(false);
+      setInterestCardKey('');
     }
   };
+
+  const interestedCardNames = availableCards
+    .filter((card) => interestedCardKeys.includes(getCardKey(card)))
+    .map((card) => card.cardName);
 
   const handleOptOut = async () => {
     setConsentUpdating(true);
@@ -131,26 +182,37 @@ const Home = () => {
     }
   };
 
+  const consentLabel = consentGiven ? 'Consent active' : optedOut ? 'Opted out' : 'Action needed';
+  const consentPill = consentGiven ? 'status-pill-ok' : optedOut ? 'status-pill-neutral' : 'status-pill-pending';
+  const consentSteps = ['Review notice', 'Verify with OTP', 'Consent active'];
+  const todayLabel = new Date().toLocaleDateString(undefined, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+
   return (
     <div className="home-container">
       <div className="home-page">
         <nav className="page-breadcrumb" aria-label="Breadcrumb">
-          <span>Workspace</span>
+          <span>Arjun Capital</span>
           <span className="page-breadcrumb-sep">/</span>
-          <span className="page-breadcrumb-current">Home</span>
+          <span className="page-breadcrumb-current">Overview</span>
         </nav>
 
-        <header className="home-hero">
+        <header className="page-hero home-hero">
           <div>
-            <p className="home-kicker">{greeting}</p>
+            <p className="page-kicker">{greeting}</p>
             <h1>Welcome back, {displayName}</h1>
-            <p className="home-subtitle">
-              Review account status, complete identity checks, and continue your ServiceNow work from one place.
+            <p className="page-subtitle">
+              Manage how your transaction data is used and explore offers available to you.
             </p>
           </div>
           <div className="home-hero-meta">
-            <span className="status-pill status-pill-live">Active session</span>
-            <span className="home-hero-time">{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+            <span className="home-hero-date">
+              <FiCalendar aria-hidden="true" /> {todayLabel}
+            </span>
           </div>
         </header>
 
@@ -159,19 +221,19 @@ const Home = () => {
             <div className="metric-icon metric-icon-user">
               <FiUser />
             </div>
-            <div>
-              <p className="metric-label">Signed-in user</p>
+            <div className="metric-body">
+              <p className="metric-label">Account holder</p>
               <p className="metric-value">{displayName}</p>
               <p className="metric-hint">{profile.email || profile.username || 'Authenticated account'}</p>
             </div>
           </article>
 
-          <article className="metric-card">
+          <article className={`metric-card metric-card-status ${consentGiven ? 'is-ok' : optedOut ? 'is-muted' : 'is-warn'}`}>
             <div className={`metric-icon ${consentGiven ? 'metric-icon-ok' : optedOut ? 'metric-icon-muted' : 'metric-icon-warn'}`}>
               {consentGiven ? <FiCheckCircle /> : <FiShield />}
             </div>
-            <div>
-              <p className="metric-label">Identity verification</p>
+            <div className="metric-body">
+              <p className="metric-label">Consent status</p>
               <p className="metric-value">{consentGiven ? 'Verified' : optedOut ? 'Opted out' : 'Pending'}</p>
               <p className="metric-hint">
                 {consentGiven
@@ -184,218 +246,350 @@ const Home = () => {
           </article>
 
           <article className="metric-card">
-            <div className="metric-icon metric-icon-activity">
-              <FiActivity />
+            <div className="metric-icon metric-icon-offers">
+              <FiCreditCard />
             </div>
-            <div>
-              <p className="metric-label">Workspace events</p>
-              <p className="metric-value">{activity.length}</p>
-              <p className="metric-hint">Recent actions in this session</p>
+            <div className="metric-body">
+              <p className="metric-label">Card offers</p>
+              <p className="metric-value tabular">
+                {consentGiven ? (cardsLoading ? '—' : availableCards.length) : <FiLock className="metric-lock" aria-label="Locked" />}
+              </p>
+              <p className="metric-hint">
+                {consentGiven
+                  ? offerInterestSent ? 'Request sent to the bank' : 'Available for you'
+                  : 'Unlocks after consent'}
+              </p>
             </div>
           </article>
         </section>
 
-        <section className="home-grid">
-          <article className="panel panel-wide verification-panel">
-            <div className="panel-header">
-              <div className="verification-header-copy">
-                <h2>Identity verification</h2>
-                <p>
-                  Consent to use your transaction data, then confirm with a one-time passcode.
-                </p>
-              </div>
-              <span
-                className={`status-pill ${
-                  consentGiven ? 'status-pill-ok' : optedOut ? 'status-pill-neutral' : 'status-pill-pending'
-                }`}
-              >
-                {consentGiven ? 'Already verified' : optedOut ? 'Opted out' : 'Action needed'}
-              </span>
-            </div>
-
-            <div className="verify-body">
-              <div className="consent-notice">
-                <p className="consent-kicker">DPDP Act, 2023</p>
-                <p>
-                  This consent is limited to the use of your <strong>transaction data</strong>
-                  solely for identity verification, fraud screening, and related protected workflows as
-                  permitted under the Digital Personal Data Protection Act, 2023. Your data will be used
-                  only for the stated verification purpose, retained only as long as necessary, and not
-                  processed for unrelated marketing, profiling, or secondary use without your additional
-                  consent.
-                </p>
-              </div>
-
-              {consentGiven ? (
-                <div className="inline-alert success" role="status">
-                  Already verified. Consent is given to use your transaction data.
-                </div>
-              ) : optedOut ? (
-                <div className="consent-optout-block">
-                  <div className="inline-alert muted" role="status">
-                    You opted out. We will not use your transaction data, and OTP verification
-                    will not be requested.
+        <div className="home-layout">
+          <div className="home-main">
+            <article className="panel verification-panel">
+              <div className="panel-section">
+                <div className="panel-header">
+                  <div className="panel-title">
+                    <span className="panel-title-icon"><FiShield aria-hidden="true" /></span>
+                    <div>
+                      <h2>Data consent</h2>
+                      <p>Consent to use your transaction data, then confirm with a one-time passcode.</p>
+                    </div>
                   </div>
-                  <div className="consent-actions">
-                    <button type="button" className="primary-btn" onClick={() => setShowOTPPopup(true)} disabled={consentUpdating}>
-                      Give consent
-                    </button>
-                    <button type="button" className="secondary-btn" onClick={handleOptOut} disabled={consentUpdating}>
-                      {consentUpdating ? 'Updating...' : 'Opt-out'}
-                    </button>
-                  </div>
+                  <span className={`status-pill ${consentPill}`}>{consentLabel}</span>
                 </div>
-              ) : (
-                <div className="consent-actions consent-actions-bottom">
-                  <button type="button" className="primary-btn" onClick={() => setShowOTPPopup(true)}>
-                    Give consent
-                  </button>
-                  <button
-                    type="button"
-                    className="secondary-btn"
-                    onClick={handleOptOut}
-                    disabled={consentUpdating}
-                  >
-                    {consentUpdating ? 'Updating...' : 'Opt-out'}
-                  </button>
-                </div>
-              )}
-              {consentError && <p className="form-message error consent-error" role="alert">{consentError}</p>}
-            </div>
-          </article>
 
-          {consentGiven && (
-          <article className="panel panel-wide offers-panel">
-            <div className="panel-header">
-              <div className="offers-header-copy">
-                <h2>Credit card offers</h2>
-                <p>
-                  Tell us you want to know about cards available for you. We’ll raise a request with the team.
-                </p>
-              </div>
-              <span className={`status-pill ${offerInterestSent ? 'status-pill-ok' : 'status-pill-pending'}`}>
-                {offerInterestSent ? 'Request sent' : 'Available'}
-              </span>
-            </div>
-
-            <div className="available-cards" aria-live="polite">
-              <div className="available-cards-heading">
-                <div>
-                  <p className="offers-section-kicker">From our bank</p>
-                  <h3>Available credit cards</h3>
-                </div>
-                <span className="available-cards-count">
-                  {cardsLoading ? 'Loading...' : `${availableCards.length} cards`}
-                </span>
-              </div>
-
-              {cardsLoading && <p className="cards-status">Loading the latest card offers...</p>}
-              {cardsError && <p className="cards-status cards-status-error" role="alert">{cardsError}</p>}
-              {!cardsLoading && !cardsError && availableCards.length === 0 && (
-                <p className="cards-status">No card offers are available right now.</p>
-              )}
-              {!cardsLoading && !cardsError && availableCards.length > 0 && (
-                <div className="card-repeater">
-                  <button
-                    type="button"
-                    className="card-repeater-arrow"
-                    onClick={() => setCardPage((currentPage) => Math.max(0, currentPage - 1))}
-                    disabled={cardPage === 0}
-                    aria-label="Show previous cards"
-                  >
-                    <FiChevronLeft aria-hidden="true" />
-                  </button>
-                  <div className="card-offer-grid" key={cardPage}>
-                    {visibleCards.map((card, index) => {
-                    const cardNumber = `4532 **** **** ${String(1048 + (cardPage * cardsPerPage + index) * 137).slice(-4)}`;
-                    const cardTheme = `card-offer-theme-${(cardPage * cardsPerPage + index) % 4}`;
+                <ol className={`consent-steps ${optedOut ? 'is-muted' : ''}`} aria-label="Consent progress">
+                  {consentSteps.map((step, index) => {
+                    const state = consentGiven ? 'done' : index === 0 && !optedOut ? 'current' : 'upcoming';
                     return (
-                    <article className={`card-offer ${cardTheme}`} key={`${card.cardName}-${card.category}`}>
-                      <div className="card-offer-topline">
-                        <span className="card-offer-category">{card.category}</span>
-                        <FiCreditCard aria-hidden="true" />
-                      </div>
-                      <div className="card-offer-brand">
-                        <span>NOVA BANK</span>
-                        <strong>{index % 2 === 0 ? 'VISA' : 'WORLD'}</strong>
-                      </div>
-                      <div className="card-offer-chip-row">
-                        <span className="card-offer-chip" aria-hidden="true" />
-                        <span className="card-offer-contactless" aria-hidden="true">)))</span>
-                      </div>
-                      <p className="card-offer-number">{cardNumber}</p>
-                      <h4>{card.cardName}</h4>
-                      <div className="card-offer-score">
-                        <span>Recommended credit score</span>
-                        <strong>{card.creditScoreRequired}+</strong>
-                      </div>
-                    </article>
+                      <li key={step} className={`consent-step consent-step-${state}`}>
+                        <span className="consent-step-dot">
+                          {state === 'done' ? <FiCheck aria-hidden="true" /> : index + 1}
+                        </span>
+                        <span className="consent-step-label">{step}</span>
+                      </li>
                     );
+                  })}
+                </ol>
+              </div>
+
+              <div className="panel-section consent-notice">
+                <p className="consent-kicker">
+                  <FiFileText aria-hidden="true" /> Digital Personal Data Protection Act, 2023
+                </p>
+                <div className="consent-columns">
+                  <div className="consent-col consent-col-use">
+                    <p className="consent-col-title">How we use it</p>
+                    <ul>
+                      <li><FiCheck aria-hidden="true" /> Identity verification</li>
+                      <li><FiCheck aria-hidden="true" /> Fraud screening</li>
+                      <li><FiCheck aria-hidden="true" /> Related protected workflows</li>
+                    </ul>
+                  </div>
+                  <div className="consent-col consent-col-never">
+                    <p className="consent-col-title">What we don’t do</p>
+                    <ul>
+                      <li><FiX aria-hidden="true" /> Unrelated marketing or profiling</li>
+                      <li><FiX aria-hidden="true" /> Secondary use without your additional consent</li>
+                      <li><FiX aria-hidden="true" /> Keep it longer than necessary</li>
+                    </ul>
+                  </div>
+                </div>
+                <details className="consent-fulltext">
+                  <summary>Read the full consent notice</summary>
+                  <p>
+                    This consent is limited to the use of your <strong>transaction data</strong>{' '}
+                    solely for identity verification, fraud screening, and related protected workflows as
+                    permitted under the Digital Personal Data Protection Act, 2023. Your data will be used
+                    only for the stated verification purpose, retained only as long as necessary, and not
+                    processed for unrelated marketing, profiling, or secondary use without your additional
+                    consent.
+                  </p>
+                </details>
+              </div>
+
+              <div className="panel-section panel-footer verify-body">
+                {consentGiven ? (
+                  <div className="inline-alert success" role="status">
+                    <FiCheckCircle aria-hidden="true" />
+                    <span>Already verified. Consent is given to use your transaction data.</span>
+                  </div>
+                ) : optedOut ? (
+                  <div className="consent-optout-block">
+                    <div className="inline-alert muted" role="status">
+                      <FiInfo aria-hidden="true" />
+                      <span>
+                        You opted out. We will not use your transaction data, and OTP verification
+                        will not be requested.
+                      </span>
+                    </div>
+                    <div className="consent-actions">
+                      <button type="button" className="primary-btn" onClick={() => setShowOTPPopup(true)} disabled={consentUpdating}>
+                        <FiShield aria-hidden="true" /> Give consent
+                      </button>
+                      <button type="button" className="secondary-btn" onClick={handleOptOut} disabled={consentUpdating}>
+                        {consentUpdating ? 'Updating...' : 'Opt-out'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="consent-actions consent-actions-bottom">
+                    <p className="consent-actions-hint">
+                      A 4-digit code will be sent to your registered mobile number.
+                    </p>
+                    <div className="consent-actions-buttons">
+                      <button
+                        type="button"
+                        className="secondary-btn"
+                        onClick={handleOptOut}
+                        disabled={consentUpdating}
+                      >
+                        {consentUpdating ? 'Updating...' : 'Opt-out'}
+                      </button>
+                      <button type="button" className="primary-btn" onClick={() => setShowOTPPopup(true)}>
+                        <FiShield aria-hidden="true" /> Give consent
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {consentError && (
+                  <div className="inline-alert error consent-error" role="alert">
+                    <FiAlertCircle aria-hidden="true" />
+                    <span>{consentError}</span>
+                  </div>
+                )}
+              </div>
+            </article>
+
+            {consentGiven && (
+            <article className="panel offers-panel">
+              <div className="panel-section">
+                <div className="panel-header">
+                  <div className="panel-title">
+                    <span className="panel-title-icon"><FiCreditCard aria-hidden="true" /></span>
+                    <div>
+                      <h2>Credit card offers</h2>
+                      <p>
+                        Tell us you want to know about cards available for you. We’ll raise a request with the team.
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`status-pill ${offerInterestSent ? 'status-pill-ok' : 'status-pill-neutral'}`}>
+                    {offerInterestSent ? 'Request sent' : 'Available'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="panel-section available-cards" aria-live="polite">
+                <div className="available-cards-heading">
+                  <div>
+                    <h3>Available credit cards</h3>
+                    <span className="available-cards-count">
+                      {cardsLoading ? 'Loading...' : `${availableCards.length} cards`}
+                    </span>
+                  </div>
+                  {!cardsLoading && !cardsError && availableCards.length > 1 && !(cardScroll.atStart && cardScroll.atEnd) && (
+                    <div className="card-pager">
+                      <button
+                        type="button"
+                        className="card-repeater-arrow"
+                        onClick={() => scrollCards(-1)}
+                        disabled={cardScroll.atStart}
+                        aria-label="Scroll to previous cards"
+                      >
+                        <FiChevronLeft aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        className="card-repeater-arrow"
+                        onClick={() => scrollCards(1)}
+                        disabled={cardScroll.atEnd}
+                        aria-label="Scroll to more cards"
+                      >
+                        <FiChevronRight aria-hidden="true" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {cardsLoading && (
+                  <div className="card-offer-grid" aria-label="Loading the latest card offers">
+                    {[0, 1].map((n) => (
+                      <div className="card-offer-item card-skeleton" key={n}>
+                        <div className="skeleton skeleton-card" />
+                        <div className="skeleton skeleton-line" />
+                        <div className="skeleton skeleton-line short" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {cardsError && (
+                  <div className="inline-alert error" role="alert">
+                    <FiAlertCircle aria-hidden="true" />
+                    <span>{cardsError}</span>
+                  </div>
+                )}
+                {!cardsLoading && !cardsError && availableCards.length === 0 && (
+                  <div className="cards-empty">
+                    <FiCreditCard aria-hidden="true" />
+                    <p>No card offers are available right now.</p>
+                  </div>
+                )}
+                {!cardsLoading && !cardsError && availableCards.length > 0 && (
+                  <div
+                    className={`card-scroller-wrap ${cardScroll.atStart ? '' : 'fade-left'} ${cardScroll.atEnd ? '' : 'fade-right'}`}
+                  >
+                  <div
+                    className="card-scroller"
+                    ref={cardScrollerRef}
+                    onScroll={updateCardScroll}
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Available credit cards, scroll horizontally"
+                  >
+                    {availableCards.map((card, index) => {
+                      const cardNumber = `4532 **** **** ${String(1048 + index * 137).slice(-4)}`;
+                      const cardTheme = `card-offer-theme-${index % 4}`;
+                      return (
+                        <div className="card-offer-item" key={`${card.cardName}-${card.category}`}>
+                          <article className={`card-offer ${cardTheme}`}>
+                            <div className="card-offer-topline">
+                              <span className="card-offer-bank">ARJUN CAPITAL</span>
+                              <span className="card-offer-contactless" aria-hidden="true">)))</span>
+                            </div>
+                            <span className="card-offer-chip" aria-hidden="true" />
+                            <p className="card-offer-number">{cardNumber}</p>
+                            <div className="card-offer-bottom">
+                              <span className="card-offer-category">{card.category}</span>
+                              <strong>{index % 2 === 0 ? 'VISA' : 'WORLD'}</strong>
+                            </div>
+                          </article>
+                          <div className="card-offer-details">
+                            <h4>{card.cardName}</h4>
+                            <div className="card-offer-score">
+                              <span>Recommended credit score</span>
+                              <strong className="tabular">{card.creditScoreRequired}+</strong>
+                            </div>
+                            {(() => {
+                              const cardKey = getCardKey(card);
+                              const isSent = interestedCardKeys.includes(cardKey);
+                              const isSending = offerInterestUpdating && interestCardKey === cardKey;
+                              return (
+                                <button
+                                  type="button"
+                                  className={`card-interest-btn ${isSent ? 'is-sent' : ''}`}
+                                  onClick={() => handleCardOfferInterest(card)}
+                                  disabled={isSent || offerInterestUpdating}
+                                  aria-label={isSent ? `Interest sent for ${card.cardName}` : `I'm interested in ${card.cardName}`}
+                                >
+                                  {isSent ? (
+                                    <><FiCheck aria-hidden="true" /> Request sent</>
+                                  ) : isSending ? (
+                                    <><span className="btn-spinner btn-spinner-dark" aria-hidden="true" /> Sending...</>
+                                  ) : (
+                                    <><FiPhoneCall aria-hidden="true" /> I'm interested</>
+                                  )}
+                                </button>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      );
                     })}
                   </div>
-                  <button
-                    type="button"
-                    className="card-repeater-arrow"
-                    onClick={() => setCardPage((currentPage) => Math.min(cardPageCount - 1, currentPage + 1))}
-                    disabled={cardPage >= cardPageCount - 1}
-                    aria-label="Show next cards"
-                  >
-                    <FiChevronRight aria-hidden="true" />
-                  </button>
-                </div>
-              )}
-              {!cardsLoading && !cardsError && cardPageCount > 1 && (
-                <p className="card-repeater-page" aria-live="polite">
-                  Showing {cardPage * cardsPerPage + 1}-{Math.min((cardPage + 1) * cardsPerPage, availableCards.length)} of {availableCards.length}
-                </p>
-              )}
-            </div>
-
-            {offerInterestSent ? (
-              <div className="inline-alert success" role="status">
-                Someone from the bank will connect shortly with the best offers for you.
-              </div>
-            ) : (
-              <div className="offers-body">
-                <button
-                  type="button"
-                  className="primary-btn"
-                  onClick={handleCardOfferInterest}
-                  disabled={offerInterestUpdating}
-                  aria-label="Contact bank for offers"
-                >
-                  <FiPhoneCall aria-hidden="true" />
-                  {offerInterestUpdating ? 'Sending...' : 'Contact bank for offers'}
-                </button>
-              </div>
-            )}
-            {offerInterestError && (
-              <p className="form-message error consent-error" role="alert">{offerInterestError}</p>
-            )}
-          </article>
-          )}
-
-          <article className="panel panel-wide">
-            <div className="panel-header">
-              <div>
-                <h2>Recent activity</h2>
-                <p>A short audit trail for this browser session.</p>
-              </div>
-            </div>
-            <ul className="activity-list">
-              {activity.map((item) => (
-                <li key={item.id}>
-                  <span className="activity-icon"><FiClock /></span>
-                  <div>
-                    <p className="activity-label">{item.label}</p>
-                    <p className="activity-detail">{item.detail}</p>
                   </div>
-                  <time>{item.time}</time>
-                </li>
-              ))}
-            </ul>
-          </article>
-        </section>
+                )}
+                {!cardsLoading && !cardsError && availableCards.length > 1 && !(cardScroll.atStart && cardScroll.atEnd) && (
+                  <p className="card-scroll-hint">Swipe or scroll sideways to see all {availableCards.length} cards</p>
+                )}
+              </div>
+
+              <div className="panel-section panel-footer">
+                {offerInterestSent ? (
+                  <div className="inline-alert success" role="status">
+                    <FiCheckCircle aria-hidden="true" />
+                    <span>
+                      {interestedCardNames.length > 0 ? (
+                        <>
+                          We’ve shared your interest in <strong>{interestedCardNames.join(', ')}</strong>.{' '}
+                        </>
+                      ) : null}
+                      Someone from the bank will connect shortly with the best offers for you.
+                    </span>
+                  </div>
+                ) : (
+                  <p className="consent-actions-hint offers-hint">
+                    <FiPhoneCall aria-hidden="true" /> Tap <strong>I’m interested</strong> on any card and our team will call you with details.
+                  </p>
+                )}
+                {offerInterestError && (
+                  <div className="inline-alert error consent-error" role="alert">
+                    <FiAlertCircle aria-hidden="true" />
+                    <span>{offerInterestError}</span>
+                  </div>
+                )}
+              </div>
+            </article>
+            )}
+          </div>
+
+          <aside className="home-aside">
+            <article className="panel activity-panel">
+              <div className="panel-section">
+                <div className="panel-header">
+                  <div>
+                    <h2>Recent activity</h2>
+                    <p>This browser session</p>
+                  </div>
+                  <span className="activity-count tabular">{activity.length}</span>
+                </div>
+              </div>
+              <ul className="activity-list">
+                {activity.map((item) => (
+                  <li key={item.id}>
+                    <span className="activity-icon"><FiClock aria-hidden="true" /></span>
+                    <div className="activity-text">
+                      <p className="activity-label">{item.label}</p>
+                      <p className="activity-detail">{item.detail}</p>
+                    </div>
+                    <time>{item.time}</time>
+                  </li>
+                ))}
+              </ul>
+            </article>
+
+            <article className="panel help-card">
+              <span className="panel-title-icon"><FiHelpCircle aria-hidden="true" /></span>
+              <div>
+                <h3>Questions about consent?</h3>
+                <p>Read how your data is handled and what opting out means.</p>
+                <Link to="/settings" state={{ tab: 'faq' }} className="help-link">
+                  View FAQs <FiArrowRight aria-hidden="true" />
+                </Link>
+              </div>
+            </article>
+          </aside>
+        </div>
       </div>
 
       {showOTPPopup && (

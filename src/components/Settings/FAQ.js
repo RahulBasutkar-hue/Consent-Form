@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FiCheckCircle, FiChevronDown, FiMessageCircle, FiSearch } from 'react-icons/fi';
 import '../../styles/FAQ.css';
 
 const FAQ = () => {
@@ -64,9 +65,11 @@ const FAQ = () => {
       </div>
 
       <div className="search-box">
+        <FiSearch className="search-icon" aria-hidden="true" />
         <input
           type="text"
-          placeholder="Search FAQs..."
+          placeholder="Search questions..."
+          aria-label="Search FAQs"
           className="faq-search"
           value={query}
           onChange={(e) => {
@@ -77,20 +80,19 @@ const FAQ = () => {
       </div>
 
       <div className="faq-list">
-        {filteredFaqs.length === 0 && <p className="form-message">No FAQs match your search.</p>}
+        {filteredFaqs.length === 0 && <p className="faq-empty">No FAQs match your search.</p>}
         {filteredFaqs.map((item, index) => (
-          <div key={item.question} className="faq-item">
+          <div key={item.question} className={`faq-item ${activeIndex === index ? 'open' : ''}`}>
             <div
               className={`faq-question ${activeIndex === index ? 'active' : ''}`}
               onClick={() => toggleFAQ(index)}
               onKeyDown={(e) => e.key === 'Enter' && toggleFAQ(index)}
               role="button"
               tabIndex={0}
+              aria-expanded={activeIndex === index}
             >
               <span>{item.question}</span>
-              <span className="faq-icon">
-                {activeIndex === index ? '−' : '+'}
-              </span>
+              <FiChevronDown className="faq-icon" aria-hidden="true" />
             </div>
 
             {activeIndex === index && (
@@ -103,12 +105,19 @@ const FAQ = () => {
       </div>
 
       <div className="faq-contact">
-        <h4>Still have questions?</h4>
-        <p>Can't find what you're looking for? Contact our support team.</p>
+        <span className="faq-contact-icon" aria-hidden="true"><FiMessageCircle /></span>
+        <div className="faq-contact-text">
+          <h4>Still have questions?</h4>
+          <p>Can't find what you're looking for? Contact our support team.</p>
+          {contacted && (
+            <p className="faq-contact-confirm">
+              <FiCheckCircle aria-hidden="true" /> Support request sent. We will reply to your profile email.
+            </p>
+          )}
+        </div>
         <button type="button" className="contact-support-btn" onClick={() => setContacted(true)}>
           Contact Support
         </button>
-        {contacted && <p className="faq-contact-confirm">Support request sent. We will reply to your profile email.</p>}
       </div>
     </div>
   );
